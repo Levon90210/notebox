@@ -1,14 +1,13 @@
-#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <errno.h>
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include "notebox.h"
 
-void init_shared_memory(notebox_t *notebox) {
+notebox_t* init_shared_memory(void) {
     const key_t key = ftok("/tmp", 'L');
     if (key == -1) {
         perror("ftok");
@@ -28,7 +27,7 @@ void init_shared_memory(notebox_t *notebox) {
             exit(1);
         }
     } else {
-        notebox = (notebox_t*)shmat(shm_id, NULL, 0);
+        notebox_t *notebox = shmat(shm_id, NULL, 0);
         if (notebox == (void*)-1) {
             perror("shmat");
             exit(1);
@@ -51,6 +50,8 @@ void init_shared_memory(notebox_t *notebox) {
 
         memset(notebox->notes, 0, sizeof(notebox->notes));
         notebox->user_count = 0;
+
+        return notebox;
     }
 }
 

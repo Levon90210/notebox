@@ -1,13 +1,23 @@
 #include <stdio.h>
-#include <pthread.h>
 #include <stdlib.h>
-#include <notebox.h>
+#include <signal.h>
+#include <sys/shm.h>
+
+#include "notebox.h"
 
 static notebox_t *notebox = NULL;
 static char current_user[MAX_AUTHOR];
 
+void signal_handler(int signo);
+void cleanup(void);
+
 int main(void) {
-    init_shared_memory(notebox);
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+
+
+    notebox = init_shared_memory();
+    atexit(cleanup);
     pthread_mutex_lock(&notebox->mutex);
     notebox->user_count++;
     pthread_mutex_unlock(&notebox->mutex);
@@ -42,5 +52,34 @@ int main(void) {
                 printf("Invalid choice. Please try again.\n");
         }
     }
-    return 0;
+}
+
+void cleanup(void) {
+    if (notebox == NULL) {
+        return;
+    }
+
+    pthread_mutex_lock(&notebox->mutex);
+    notebox->user_count--;
+    const int is_last_user = (notebox->user_count == 0);
+    pthread_mutex_unlock(&notebox->mutex);
+
+    if (is_last_user) {
+        pthread_mutex_destroy(&notebox->mutex);
+        shmdt(notebox);
+        const key_t key = ftok("/tmp", 'L');
+        if (key != -1) {
+            const int shm_id = shmget(key, sizeof(notebox_t), 0666);
+            if (shm_id != -1) {
+                shmctl(shm_id, IPC_RMID, NULL);
+            }
+        }
+    } else {
+        shmdt(notebox);
+    }
+}
+
+void signal_handler(const int signo) {
+    printf("\nReceived signal %d. Cleaning up...\n", signo);
+    exit(0);
 }

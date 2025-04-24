@@ -20,7 +20,7 @@ typedef struct {
     int user_count;
 } notebox_t;
 
-void init_shared_memory(notebox_t *notebox);
+notebox_t* init_shared_memory(void);
 void view_notes(notebox_t *notebox);
 void add_note(notebox_t *notebox, char current_user[MAX_AUTHOR]);
 void delete_note(notebox_t *notebox, char current_user[MAX_AUTHOR]);
