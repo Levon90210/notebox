@@ -41,13 +41,45 @@ include CMakeFiles/rules.ninja
 
 cmake_ninja_workdir = /home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug/
 # =============================================================================
+# Object build statements for STATIC_LIBRARY target NoteBoxLib
+
+
+#############################################
+# Order-only phony target for NoteBoxLib
+
+build cmake_object_order_depends_target_NoteBoxLib: phony || .
+
+build CMakeFiles/NoteBoxLib.dir/src/notebox.c.o: C_COMPILER__NoteBoxLib_unscanned_Debug /home/levon/CLionProjects/Algorithms/NoteBox/src/notebox.c || cmake_object_order_depends_target_NoteBoxLib
+  DEP_FILE = CMakeFiles/NoteBoxLib.dir/src/notebox.c.o.d
+  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  INCLUDES = -I/home/levon/CLionProjects/Algorithms/NoteBox/include
+  OBJECT_DIR = CMakeFiles/NoteBoxLib.dir
+  OBJECT_FILE_DIR = CMakeFiles/NoteBoxLib.dir/src
+
+
+# =============================================================================
+# Link build statements for STATIC_LIBRARY target NoteBoxLib
+
+
+#############################################
+# Link the static library libNoteBoxLib.a
+
+build libNoteBoxLib.a: C_STATIC_LIBRARY_LINKER__NoteBoxLib_Debug CMakeFiles/NoteBoxLib.dir/src/notebox.c.o
+  LANGUAGE_COMPILE_FLAGS = -g
+  OBJECT_DIR = CMakeFiles/NoteBoxLib.dir
+  POST_BUILD = :
+  PRE_LINK = :
+  TARGET_FILE = libNoteBoxLib.a
+  TARGET_PDB = NoteBoxLib.a.dbg
+
+# =============================================================================
 # Object build statements for EXECUTABLE target NoteBox
 
 
 #############################################
 # Order-only phony target for NoteBox
 
-build cmake_object_order_depends_target_NoteBox: phony || .
+build cmake_object_order_depends_target_NoteBox: phony || cmake_object_order_depends_target_NoteBoxLib
 
 build CMakeFiles/NoteBox.dir/main.c.o: C_COMPILER__NoteBox_unscanned_Debug /home/levon/CLionProjects/Algorithms/NoteBox/main.c || cmake_object_order_depends_target_NoteBox
   DEP_FILE = CMakeFiles/NoteBox.dir/main.c.o.d
@@ -64,11 +96,11 @@ build CMakeFiles/NoteBox.dir/main.c.o: C_COMPILER__NoteBox_unscanned_Debug /home
 #############################################
 # Link the executable NoteBox
 
-build NoteBox: C_EXECUTABLE_LINKER__NoteBox_Debug CMakeFiles/NoteBox.dir/main.c.o
+build NoteBox: C_EXECUTABLE_LINKER__NoteBox_Debug CMakeFiles/NoteBox.dir/main.c.o | libNoteBoxLib.a || libNoteBoxLib.a
   DEP_FILE = CMakeFiles/NoteBox.dir/link.d
   FLAGS = -g
   LINK_FLAGS = -Wl,--dependency-file=CMakeFiles/NoteBox.dir/link.d
-  LINK_PATH = -L/home/levon/CLionProjects/Algorithms/NoteBox/pthread   -L/home/levon/CLionProjects/Algorithms/NoteBox/NoteBoxLib
+  LINK_LIBRARIES = -lpthread  libNoteBoxLib.a
   OBJECT_DIR = CMakeFiles/NoteBox.dir
   POST_BUILD = :
   PRE_LINK = :
@@ -99,71 +131,9 @@ build CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
 build rebuild_cache: phony CMakeFiles/rebuild_cache.util
 
 # =============================================================================
-# Write statements declared in CMakeLists.txt:
-# /home/levon/CLionProjects/Algorithms/NoteBox/CMakeLists.txt
-# =============================================================================
-
-# =============================================================================
-# Object build statements for STATIC_LIBRARY target NoteBoxLib
-
-
-#############################################
-# Order-only phony target for NoteBoxLib
-
-build cmake_object_order_depends_target_NoteBoxLib: phony || .
-
-build src/CMakeFiles/NoteBoxLib.dir/init_shared_memory.c.o: C_COMPILER__NoteBoxLib_unscanned_Debug /home/levon/CLionProjects/Algorithms/NoteBox/src/init_shared_memory.c || cmake_object_order_depends_target_NoteBoxLib
-  DEP_FILE = src/CMakeFiles/NoteBoxLib.dir/init_shared_memory.c.o.d
-  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
-  INCLUDES = -I/home/levon/CLionProjects/Algorithms/NoteBox/include
-  OBJECT_DIR = src/CMakeFiles/NoteBoxLib.dir
-  OBJECT_FILE_DIR = src/CMakeFiles/NoteBoxLib.dir
-
-
-# =============================================================================
-# Link build statements for STATIC_LIBRARY target NoteBoxLib
-
-
-#############################################
-# Link the static library src/libNoteBoxLib.a
-
-build src/libNoteBoxLib.a: C_STATIC_LIBRARY_LINKER__NoteBoxLib_Debug src/CMakeFiles/NoteBoxLib.dir/init_shared_memory.c.o
-  LANGUAGE_COMPILE_FLAGS = -g
-  OBJECT_DIR = src/CMakeFiles/NoteBoxLib.dir
-  POST_BUILD = :
-  PRE_LINK = :
-  TARGET_FILE = src/libNoteBoxLib.a
-  TARGET_PDB = NoteBoxLib.a.dbg
-
-
-#############################################
-# Utility command for edit_cache
-
-build src/CMakeFiles/edit_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug/src && /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
-  DESC = No interactive CMake dialog available...
-  restat = 1
-
-build src/edit_cache: phony src/CMakeFiles/edit_cache.util
-
-
-#############################################
-# Utility command for rebuild_cache
-
-build src/CMakeFiles/rebuild_cache.util: CUSTOM_COMMAND
-  COMMAND = cd /home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug/src && /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/bin/cmake --regenerate-during-build -S/home/levon/CLionProjects/Algorithms/NoteBox -B/home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug
-  DESC = Running CMake to regenerate build system...
-  pool = console
-  restat = 1
-
-build src/rebuild_cache: phony src/CMakeFiles/rebuild_cache.util
-
-# =============================================================================
 # Target aliases.
 
-build NoteBoxLib: phony src/libNoteBoxLib.a
-
-build libNoteBoxLib.a: phony src/libNoteBoxLib.a
+build NoteBoxLib: phony libNoteBoxLib.a
 
 # =============================================================================
 # Folder targets.
@@ -173,28 +143,14 @@ build libNoteBoxLib.a: phony src/libNoteBoxLib.a
 #############################################
 # Folder: /home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug
 
-build codegen: phony src/codegen
-
-# =============================================================================
-
-#############################################
-# Folder: /home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug/src
-
-build src/codegen: phony
+build codegen: phony
 
 # =============================================================================
 
 #############################################
 # Folder: /home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug
 
-build all: phony NoteBox src/all
-
-# =============================================================================
-
-#############################################
-# Folder: /home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug/src
-
-build src/all: phony src/libNoteBoxLib.a
+build all: phony libNoteBoxLib.a NoteBox
 
 # =============================================================================
 # Built-in targets
@@ -203,14 +159,14 @@ build src/all: phony src/libNoteBoxLib.a
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeCInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeCommonLanguageInclude.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeGenericSystem.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeInitializeConfigs.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeLanguageInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeSystemSpecificInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeSystemSpecificInitialize.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/CMakeCommonCompilerMacros.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CMakeCLinkerInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CMakeCommonLinkerInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Linker/GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Linker/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/Linux-GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/Linux-GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-Initialize.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/UnixPaths.cmake /home/levon/CLionProjects/Algorithms/NoteBox/CMakeLists.txt /home/levon/CLionProjects/Algorithms/NoteBox/src/CMakeLists.txt CMakeCache.txt CMakeFiles/3.31.6/CMakeCCompiler.cmake CMakeFiles/3.31.6/CMakeSystem.cmake
+build build.ninja: RERUN_CMAKE | /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeCInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeCommonLanguageInclude.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeGenericSystem.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeInitializeConfigs.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeLanguageInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeSystemSpecificInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeSystemSpecificInitialize.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/CMakeCommonCompilerMacros.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CMakeCLinkerInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CMakeCommonLinkerInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Linker/GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Linker/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/Linux-GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/Linux-GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-Initialize.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/UnixPaths.cmake /home/levon/CLionProjects/Algorithms/NoteBox/CMakeLists.txt CMakeCache.txt CMakeFiles/3.31.6/CMakeCCompiler.cmake CMakeFiles/3.31.6/CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeCInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeCommonLanguageInclude.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeGenericSystem.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeInitializeConfigs.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeLanguageInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeSystemSpecificInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeSystemSpecificInitialize.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/CMakeCommonCompilerMacros.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CMakeCLinkerInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CMakeCommonLinkerInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Linker/GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Linker/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/Linux-GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/Linux-GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-Initialize.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/UnixPaths.cmake /home/levon/CLionProjects/Algorithms/NoteBox/CMakeLists.txt /home/levon/CLionProjects/Algorithms/NoteBox/src/CMakeLists.txt CMakeCache.txt CMakeFiles/3.31.6/CMakeCCompiler.cmake CMakeFiles/3.31.6/CMakeSystem.cmake: phony
+build /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeCInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeCommonLanguageInclude.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeGenericSystem.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeInitializeConfigs.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeLanguageInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeSystemSpecificInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/CMakeSystemSpecificInitialize.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/CMakeCommonCompilerMacros.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Compiler/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CMakeCLinkerInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Internal/CMakeCommonLinkerInformation.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Linker/GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Linker/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/Linux-GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linker/Linux-GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-GNU-C.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-GNU.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux-Initialize.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/Linux.cmake /home/levon/.local/share/JetBrains/Toolbox/apps/clion/bin/cmake/linux/x64/share/cmake-3.31/Modules/Platform/UnixPaths.cmake /home/levon/CLionProjects/Algorithms/NoteBox/CMakeLists.txt CMakeCache.txt CMakeFiles/3.31.6/CMakeCCompiler.cmake CMakeFiles/3.31.6/CMakeSystem.cmake: phony
 
 
 #############################################

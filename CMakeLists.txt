@@ -6,9 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(include)
 
-add_subdirectory(src)
+add_library(NoteBoxLib src/notebox.c)
 
 add_executable(NoteBox main.c)
 
-target_link_directories(NoteBox PRIVATE pthread)
-target_link_directories(NoteBox PRIVATE NoteBoxLib)
+target_link_libraries(NoteBox
+    PRIVATE
+    pthread
+    NoteBoxLib
+)
