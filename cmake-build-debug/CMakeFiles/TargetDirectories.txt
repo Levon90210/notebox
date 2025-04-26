@@ -1,4 +1,0 @@
-/home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug/CMakeFiles/NoteBoxLib.dir
-/home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug/CMakeFiles/NoteBox.dir
-/home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/levon/CLionProjects/Algorithms/NoteBox/cmake-build-debug/CMakeFiles/rebuild_cache.dir
