@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <string.h>
 #include <sys/shm.h>
 
 #include "notebox.h"
@@ -15,26 +16,32 @@ int main(void) {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
-
     notebox = init_shared_memory();
     atexit(cleanup);
+
+    printf("Welcome to NoteBox!\n");
+    printf("Enter your name (max %d characters): ", MAX_AUTHOR - 1);
+    while (fgets(current_user, MAX_AUTHOR, stdin) == NULL) {
+        printf("Error reading your name. Please try again.\n");
+    }
+    current_user[strcspn(current_user, "\n")] = '\0';
+
     pthread_mutex_lock(&notebox->mutex);
     notebox->user_count++;
     pthread_mutex_unlock(&notebox->mutex);
 
     while (1) {
-        printf("Enter your name (max %d characters): ", MAX_AUTHOR - 1);
-        fgets(current_user, MAX_AUTHOR, stdin);
-
-        printf("\nWelcome to NoteBox!\n");
-        printf("1. View all notes\n");
+        printf("\n1. View all notes\n");
         printf("2. Add a new note\n");
         printf("3. Delete one of my notes\n");
         printf("4. Exit\n");
         printf("Enter your choice: ");
 
         int choice = 0;
-        scanf("%d", &choice);
+        if (scanf("%d", &choice) != 1) {
+            printf("\nInvalid choice. Please try again.\n");
+        }
+        clean_input_buffer();
 
         switch (choice) {
             case 1:
@@ -49,15 +56,22 @@ int main(void) {
             case 4:
                 exit(0);
             default:
-                printf("Invalid choice. Please try again.\n");
+                printf("\nInvalid choice. Please try again.\n");
         }
     }
+}
+
+
+void signal_handler(const int signo) {
+    printf("\nReceived signal %d. Cleaning up...\n", signo);
+    exit(0);
 }
 
 void cleanup(void) {
     if (notebox == NULL) {
         return;
     }
+    printf("\nCleaning up...\n");
 
     pthread_mutex_lock(&notebox->mutex);
     notebox->user_count--;
@@ -65,21 +79,24 @@ void cleanup(void) {
     pthread_mutex_unlock(&notebox->mutex);
 
     if (is_last_user) {
-        pthread_mutex_destroy(&notebox->mutex);
-        shmdt(notebox);
+        if (pthread_mutex_destroy(&notebox->mutex) != 0) {
+            perror("pthread_mutex_destroy");
+        }
+        if (shmdt(notebox) == -1) {
+            perror("shmdt");
+        }
         const key_t key = ftok("/tmp", 'L');
         if (key != -1) {
             const int shm_id = shmget(key, sizeof(notebox_t), 0666);
             if (shm_id != -1) {
-                shmctl(shm_id, IPC_RMID, NULL);
+                if (shmctl(shm_id, IPC_RMID, NULL) == -1) {
+                    perror("shmctl");
+                }
             }
         }
     } else {
-        shmdt(notebox);
+        if (shmdt(notebox) == -1) {
+            perror("shmdt");
+        }
     }
-}
-
-void signal_handler(const int signo) {
-    printf("\nReceived signal %d. Cleaning up...\n", signo);
-    exit(0);
 }
