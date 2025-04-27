@@ -109,9 +109,9 @@ void add_note(notebox_t *notebox, char current_user[MAX_AUTHOR]) {
 
     strncpy(note->author, current_user, MAX_AUTHOR);
 
-    printf("Enter note text (max %d characters): ", MAX_TEXT - 1);
+    printf("\nEnter note text (max %d characters): ", MAX_TEXT - 1);
     while (fgets(note->text, MAX_TEXT, stdin) == NULL) {
-        printf("Error reading note text. Please try again.\n");
+        printf("\nError reading note text. Please try again.\n");
     }
     note->text[strcspn(note->text, "\n")] = '\0';
 
@@ -122,6 +122,51 @@ void add_note(notebox_t *notebox, char current_user[MAX_AUTHOR]) {
     strftime(note->timestamp, 20, "%Y-%m-%d %H:%M", t);
 
     printf("\nNote added successfully.\n");
+    pthread_mutex_unlock(&notebox->mutex);
+}
+
+void edit_note(notebox_t *notebox, char current_user[MAX_AUTHOR]) {
+    pthread_mutex_lock(&notebox->mutex);
+
+    int index = -1;
+    printf("\nEnter the index of the note you want to edit: ");
+    if (scanf("%d", &index) != 1) {
+        pthread_mutex_unlock(&notebox->mutex);
+        printf("\nInvalid note index.\n");
+        return;
+    }
+    clean_input_buffer();
+
+    if (index < 0 || index >= MAX_NOTES) {
+        pthread_mutex_unlock(&notebox->mutex);
+        printf("\nInvalid note index.\n");
+        return;
+    }
+
+    note_t* note = &notebox->notes[index];
+    if (!note->active) {
+        pthread_mutex_unlock(&notebox->mutex);
+        printf("\nInvalid note index.\n");
+        return;
+    }
+
+    if (strcmp(note->author, current_user) != 0) {
+        pthread_mutex_unlock(&notebox->mutex);
+        printf("\nYou can only edit your own notes.\n");
+        return;
+    }
+
+    printf("\nEnter new note text (max %d characters): ", MAX_TEXT - 1);
+    while (fgets(note->text, MAX_TEXT, stdin) == NULL) {
+        printf("\nError reading new note text. Please try again.\n");
+    }
+    note->text[strcspn(note->text, "\n")] = '\0';
+
+    const time_t now = time(NULL);
+    const struct tm *t = localtime(&now);
+    strftime(note->timestamp, 20, "%Y-%m-%d %H:%M", t);
+
+    printf("\nNote edited successfully.\n");
     pthread_mutex_unlock(&notebox->mutex);
 }
 
@@ -156,7 +201,11 @@ void delete_note(notebox_t *notebox, char current_user[MAX_AUTHOR]) {
         return;
     }
 
-    note->active = 0;
-    printf("\nNote deleted successfully.\n");
+    printf("\nAre you sure you want to delete this note? [Y/n]:  ");
+    const int answer = getchar();
+    if (answer == 'y' || answer == 'Y') {
+        note->active = 0;
+        printf("\nNote deleted successfully.\n");
+    }
     pthread_mutex_unlock(&notebox->mutex);
 }

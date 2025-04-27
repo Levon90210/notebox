@@ -33,8 +33,9 @@ int main(void) {
     while (1) {
         printf("\n1. View all notes\n");
         printf("2. Add a new note\n");
-        printf("3. Delete one of my notes\n");
-        printf("4. Exit\n");
+        printf("3. Edit one of my notes\n");
+        printf("4. Delete one of my notes\n");
+        printf("5. Exit\n");
         printf("Enter your choice: ");
 
         int choice = 0;
@@ -51,16 +52,18 @@ int main(void) {
                 add_note(notebox, current_user);
                 break;
             case 3:
-                delete_note(notebox, current_user);
+                edit_note(notebox, current_user);
                 break;
             case 4:
+                delete_note(notebox, current_user);
+                break;
+            case 5:
                 exit(0);
             default:
                 printf("\nInvalid choice. Please try again.\n");
         }
     }
 }
-
 
 void signal_handler(const int signo) {
     printf("\nReceived signal %d. Cleaning up...\n", signo);
@@ -71,7 +74,7 @@ void cleanup(void) {
     if (notebox == NULL) {
         return;
     }
-    printf("\nCleaning up...\n");
+    printf("\nCleaning up...Goodbye!\n");
 
     pthread_mutex_lock(&notebox->mutex);
     notebox->user_count--;

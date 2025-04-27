@@ -24,6 +24,7 @@ notebox_t* init_shared_memory(void);
 void clean_input_buffer(void);
 void view_notes(notebox_t *notebox);
 void add_note(notebox_t *notebox, char current_user[MAX_AUTHOR]);
+void edit_note(notebox_t *notebox, char current_user[MAX_AUTHOR]);
 void delete_note(notebox_t *notebox, char current_user[MAX_AUTHOR]);
 
 #endif //NOTEBOX_H
