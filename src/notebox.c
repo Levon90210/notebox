@@ -1,16 +1,25 @@
+#include <ncurses.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <errno.h>
 #include <time.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "notebox.h"
 
+void print_error(const char *msg) {
+    int rows = 0, cols = 0;
+    getmaxyx(stdscr, rows, cols);
+    attron(COLOR_PAIR(4));
+    mvprintw(rows / 2, cols / 2 - 10, "Error: %s failed: %s", msg, strerror(errno));
+    attroff(COLOR_PAIR(4));
+    getch();
+}
+
 notebox_t* init_shared_memory(void) {
     const key_t key = ftok("/tmp", 'L');
     if (key == -1) {
-        perror("ftok");
+        print_error("ftok");
         exit(1);
     }
 
@@ -19,37 +28,37 @@ notebox_t* init_shared_memory(void) {
         if (errno == EEXIST) {
             shm_id = shmget(key, sizeof(notebox_t), IPC_CREAT | 0666);
             if (shm_id == -1) {
-                perror("shmget");
+                print_error("shmget");
                 exit(1);
             }
             notebox_t *notebox = shmat(shm_id, NULL, 0);
             if (notebox == (void*)-1) {
-                perror("shmat");
+                print_error("shmat");
                 exit(1);
             }
             return notebox;
         }
-        perror("shmget");
+        print_error("shmget");
         exit(1);
     }
 
     notebox_t *notebox = shmat(shm_id, NULL, 0);
     if (notebox == (void*)-1) {
-        perror("shmat");
+        print_error("shmat");
         exit(1);
     }
 
     pthread_mutexattr_t attr;
     if (pthread_mutexattr_init(&attr) != 0) {
-        perror("pthread_mutexattr_init");
+        print_error("pthread_mutexattr_init");
         exit(1);
     }
     if (pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) != 0) {
-        perror("pthread_mutexattr_setpshared");
+        print_error("pthread_mutexattr_setpshared");
         exit(1);
     }
     if (pthread_mutex_init(&notebox->mutex, &attr) != 0) {
-        perror("pthread_mutex_init");
+        print_error("pthread_mutex_init");
         exit(1);
     }
     pthread_mutexattr_destroy(&attr);
@@ -60,36 +69,55 @@ notebox_t* init_shared_memory(void) {
     return notebox;
 }
 
-void clean_input_buffer(void) {
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF);
-}
+void view_notes(notebox_t *notebox, const char current_user[MAX_AUTHOR]) {
+    clear();
+    int rows = 0, cols = 0;
+    getmaxyx(stdscr, rows, cols);
 
-void view_notes(notebox_t *notebox) {
     pthread_mutex_lock(&notebox->mutex);
 
     int found = 0;
+    int line = 2;
     for (int i = 0; i < MAX_NOTES; i++) {
         note_t* note = &notebox->notes[i];
-        if (note->active) {
-            found = 1;
-            printf("\n[%d] by %s at %s\n\t%s\n",
-                i,
-                note->author,
-                note->timestamp,
-                note->text
-            );
+
+        if (!note->active) {
+            continue;
         }
+
+        found = 1;
+
+        if (strcmp(note->author, current_user) == 0) {
+            attron(COLOR_PAIR(2));
+        } else {
+            attron(COLOR_PAIR(1));
+        }
+
+        mvprintw(line++, 2, "[%d] by %s at %s", i, note->author, note->timestamp);
+        mvprintw(line++, 4, "%s", note->text);
+
+        attroff(COLOR_PAIR(2));
+        attroff(COLOR_PAIR(1));
     }
 
     if (!found) {
-        printf("\nNo notes found.\n");
+        mvprintw(rows / 2, (cols - 15) / 2, "No notes found.");
     }
 
+    attron(COLOR_PAIR(1));
+    mvprintw(rows - 2, 2, "Press any to return...");
+    attroff(COLOR_PAIR(1));
+
+    refresh();
+    getch();
     pthread_mutex_unlock(&notebox->mutex);
 }
 
-void add_note(notebox_t *notebox, char current_user[MAX_AUTHOR]) {
+void add_note(notebox_t *notebox, const char current_user[MAX_AUTHOR]) {
+    clear();
+    int rows = 0, cols = 0;
+    getmaxyx(stdscr, rows, cols);
+
     pthread_mutex_lock(&notebox->mutex);
 
     int slot = -1;
@@ -101,7 +129,7 @@ void add_note(notebox_t *notebox, char current_user[MAX_AUTHOR]) {
     }
 
     if (slot == -1) {
-        printf("\nNoteBox is full. Cannot add new note.\n");
+        mvprintw(rows / 2, (cols - 15) / 2, "NoteBox is full. Cannot add new note.");
         pthread_mutex_unlock(&notebox->mutex);
         return;
     }
@@ -109,11 +137,18 @@ void add_note(notebox_t *notebox, char current_user[MAX_AUTHOR]) {
 
     strncpy(note->author, current_user, MAX_AUTHOR);
 
-    printf("\nEnter note text (max %d characters): ", MAX_TEXT - 1);
-    while (fgets(note->text, MAX_TEXT, stdin) == NULL) {
-        printf("\nError reading note text. Please try again.\n");
-    }
-    note->text[strcspn(note->text, "\n")] = '\0';
+    attron(COLOR_PAIR(2));
+    mvprintw(rows / 2 - 3, cols / 2 - 20, "Enter note text (max %d chars)", MAX_TEXT - 1);
+    mvprintw(rows / 2 - 1, 2, ">");
+    attroff(COLOR_PAIR(2));
+
+    move(rows / 2 - 1, 4);
+    echo();
+    curs_set(1);
+    getnstr(note->text, MAX_TEXT - 1);
+    curs_set(0);
+    noecho();
+    refresh();
 
     note->active = 1;
 
@@ -121,91 +156,227 @@ void add_note(notebox_t *notebox, char current_user[MAX_AUTHOR]) {
     const struct tm *t = localtime(&now);
     strftime(note->timestamp, 20, "%Y-%m-%d %H:%M", t);
 
-    printf("\nNote added successfully.\n");
+    clear();
+    attron(COLOR_PAIR(2));
+    mvprintw(rows / 2 - 1, (cols - 18) / 2, "Note added successfully.");
+    attroff(COLOR_PAIR(2));
+
+    refresh();
+    napms(750);
     pthread_mutex_unlock(&notebox->mutex);
 }
 
-void edit_note(notebox_t *notebox, char current_user[MAX_AUTHOR]) {
+void edit_note(notebox_t *notebox, const char current_user[MAX_AUTHOR]) {
+    clear();
+    int rows = 0, cols = 0;
+    getmaxyx(stdscr, rows, cols);
+
     pthread_mutex_lock(&notebox->mutex);
 
+    attron(COLOR_PAIR(1));
+    mvprintw(2, (cols - 15) / 2, "Your Notes");
+
+    int found = 0;
+    int line = 4;
+    for (int i = 0; i < MAX_NOTES; i++) {
+        note_t* note = &notebox->notes[i];
+
+        if (!note->active) {
+            continue;
+        }
+        if (strcmp(note->author, current_user) != 0) {
+            continue;
+        }
+
+        found = 1;
+
+        mvprintw(line++, 4, "[%d] by %s at %s", i, note->author, note->timestamp);
+        mvprintw(line++, 6, "%s", note->text);
+    }
+
+    if (!found) {
+        mvprintw(line, (cols - 15) / 2, "-");
+    }
+    attroff(COLOR_PAIR(1));
+
+    line += 2;
+
+    attron(COLOR_PAIR(2));
+    mvprintw(line, cols / 2 - 27, "Enter the index of the note you want to edit: ");
+    attroff(COLOR_PAIR(2));
+
     int index = -1;
-    printf("\nEnter the index of the note you want to edit: ");
-    if (scanf("%d", &index) != 1) {
-        pthread_mutex_unlock(&notebox->mutex);
-        printf("\nInvalid note index.\n");
-        return;
-    }
-    clean_input_buffer();
+    while (1) {
+        echo();
+        curs_set(1);
+        move(line, cols / 2 + 20);
+        clrtoeol();
+        refresh();
 
-    if (index < 0 || index >= MAX_NOTES) {
-        pthread_mutex_unlock(&notebox->mutex);
-        printf("\nInvalid note index.\n");
-        return;
+        const int s = scanw("%d", &index);
+        curs_set(0);
+        noecho();
+        if (s != 1) {
+            flushinp();
+            attron(COLOR_PAIR(4));
+            mvprintw(line + 1, cols / 2 - 20, "Invalid input. Please enter a number.");
+            attroff(COLOR_PAIR(4));
+        } else if (index >= 0 && index < MAX_NOTES) {
+            note_t* note = &notebox->notes[index];
+            if (!note->active) {
+                attron(COLOR_PAIR(4));
+                mvprintw(line + 1, cols / 2 - 20, "Invalid note index. Please try again.");
+                attroff(COLOR_PAIR(4));
+            } else if (strcmp(note->author, current_user) != 0) {
+                attron(COLOR_PAIR(4));
+                mvprintw(line + 1, cols / 2 - 20, "You can only edit your own notes.");
+                attroff(COLOR_PAIR(4));
+            } else {
+                break;
+            }
+        } else {
+            attron(COLOR_PAIR(4));
+            mvprintw(line + 1, cols / 2 - 20, "Invalid note index. Please try again.");
+            attroff(COLOR_PAIR(4));
+        }
+        refresh();
+        napms(1000);
+        move(line + 1, cols / 2 - 20);
+        clrtoeol();
     }
+    refresh();
 
+    line += 2;
     note_t* note = &notebox->notes[index];
-    if (!note->active) {
-        pthread_mutex_unlock(&notebox->mutex);
-        printf("\nInvalid note index.\n");
-        return;
-    }
 
-    if (strcmp(note->author, current_user) != 0) {
-        pthread_mutex_unlock(&notebox->mutex);
-        printf("\nYou can only edit your own notes.\n");
-        return;
-    }
+    attron(COLOR_PAIR(2));
+    mvprintw(line++, cols / 2 - 20, "Enter new note text (max %d chars)", MAX_TEXT - 1);
+    mvprintw(line, 2, ">");
+    attroff(COLOR_PAIR(2));
 
-    printf("\nEnter new note text (max %d characters): ", MAX_TEXT - 1);
-    while (fgets(note->text, MAX_TEXT, stdin) == NULL) {
-        printf("\nError reading new note text. Please try again.\n");
-    }
-    note->text[strcspn(note->text, "\n")] = '\0';
+    move(line, 4);
+    echo();
+    curs_set(1);
+    getnstr(note->text, MAX_TEXT - 1);
+    curs_set(0);
+    noecho();
+    refresh();
 
     const time_t now = time(NULL);
     const struct tm *t = localtime(&now);
     strftime(note->timestamp, 20, "%Y-%m-%d %H:%M", t);
 
-    printf("\nNote edited successfully.\n");
+    clear();
+    attron(COLOR_PAIR(2));
+    mvprintw(rows / 2 - 1, (cols - 18) / 2, "Note edited successfully.");
+    attroff(COLOR_PAIR(2));
+
+    refresh();
+    napms(750);
     pthread_mutex_unlock(&notebox->mutex);
 }
 
-void delete_note(notebox_t *notebox, char current_user[MAX_AUTHOR]) {
+void delete_note(notebox_t *notebox, const char current_user[MAX_AUTHOR]) {
+    clear();
+    int rows = 0, cols = 0;
+    getmaxyx(stdscr, rows, cols);
+
     pthread_mutex_lock(&notebox->mutex);
 
-    int index = -1;
-    printf("\nEnter the index of the note you want to delete: ");
-    if (scanf("%d", &index) != 1) {
-        pthread_mutex_unlock(&notebox->mutex);
-        printf("\nInvalid note index.\n");
-        return;
-    }
-    clean_input_buffer();
+    attron(COLOR_PAIR(1));
+    mvprintw(2, (cols - 15) / 2, "Your Notes");
 
-    if (index < 0 || index >= MAX_NOTES) {
-        pthread_mutex_unlock(&notebox->mutex);
-        printf("\nInvalid note index.\n");
-        return;
+    int found = 0;
+    int line = 4;
+    for (int i = 0; i < MAX_NOTES; i++) {
+        note_t* note = &notebox->notes[i];
+
+        if (!note->active) {
+            continue;
+        }
+        if (strcmp(note->author, current_user) != 0) {
+            continue;
+        }
+
+        found = 1;
+
+        mvprintw(line++, 4, "[%d] by %s at %s", i, note->author, note->timestamp);
+        mvprintw(line++, 6, "%s", note->text);
     }
+
+    if (!found) {
+        mvprintw(line, (cols - 15) / 2, "-");
+    }
+    attroff(COLOR_PAIR(1));
+
+    line += 2;
+
+    attron(COLOR_PAIR(2));
+    mvprintw(line, cols / 2 - 27, "Enter the index of the note you want to delete: ");
+    attroff(COLOR_PAIR(2));
+
+    int index = -1;
+    while (1) {
+        echo();
+        curs_set(1);
+        move(line, cols / 2 + 21);
+        clrtoeol();
+        refresh();
+
+        const int s = scanw("%d", &index);
+        curs_set(0);
+        noecho();
+        if (s != 1) {
+            flushinp();
+            attron(COLOR_PAIR(4));
+            mvprintw(line + 1, cols / 2 - 20, "Invalid input. Please enter a number.");
+            attroff(COLOR_PAIR(4));
+        } else if (index >= 0 && index < MAX_NOTES) {
+            note_t* note = &notebox->notes[index];
+            if (!note->active) {
+                attron(COLOR_PAIR(4));
+                mvprintw(line + 1, cols / 2 - 20, "Invalid note index. Please try again.");
+                attroff(COLOR_PAIR(4));
+            } else if (strcmp(note->author, current_user) != 0) {
+                attron(COLOR_PAIR(4));
+                mvprintw(line + 1, cols / 2 - 20, "You can only delete your own notes.");
+                attroff(COLOR_PAIR(4));
+            } else {
+                break;
+            }
+        } else {
+            attron(COLOR_PAIR(4));
+            mvprintw(line + 1, cols / 2 - 20, "Invalid note index. Please try again.");
+            attroff(COLOR_PAIR(4));
+        }
+        refresh();
+        napms(1000);
+        move(line + 1, cols / 2 - 20);
+        clrtoeol();
+    }
+    refresh();
 
     note_t* note = &notebox->notes[index];
-    if (!note->active) {
-        pthread_mutex_unlock(&notebox->mutex);
-        printf("\nInvalid note index.\n");
-        return;
-    }
 
-    if (strcmp(note->author, current_user) != 0) {
-        pthread_mutex_unlock(&notebox->mutex);
-        printf("\nYou can only delete your own notes.\n");
-        return;
-    }
+    clear();
+    attron(COLOR_PAIR(2));
+    mvprintw(rows / 2 - 1, cols / 2 - 30, "Are you sure you want to delete this note? [Y/n]:  ");
+    attroff(COLOR_PAIR(2));
 
-    printf("\nAre you sure you want to delete this note? [Y/n]:  ");
-    const int answer = getchar();
+    echo();
+    curs_set(1);
+    const int answer = getch();
+    curs_set(0);
+    noecho();
     if (answer == 'y' || answer == 'Y') {
         note->active = 0;
-        printf("\nNote deleted successfully.\n");
+        clear();
+        attron(COLOR_PAIR(2));
+        mvprintw(rows / 2 - 1, (cols - 18) / 2, "Note deleted successfully.");
+        attroff(COLOR_PAIR(2));
+
+        refresh();
+        napms(750);
     }
     pthread_mutex_unlock(&notebox->mutex);
 }

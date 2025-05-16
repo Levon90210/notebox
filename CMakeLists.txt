@@ -13,5 +13,6 @@ add_executable(NoteBox main.c)
 target_link_libraries(NoteBox
     PRIVATE
     pthread
+    ncurses
     NoteBoxLib
 )

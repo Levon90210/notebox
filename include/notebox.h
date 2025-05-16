@@ -3,9 +3,9 @@
 
 #include <pthread.h>
 
-#define MAX_NOTES 20
-#define MAX_TEXT 200
-#define MAX_AUTHOR 32
+#define MAX_NOTES   20
+#define MAX_TEXT    200
+#define MAX_AUTHOR  32
 
 typedef struct {
     char text[MAX_TEXT];
@@ -20,11 +20,17 @@ typedef struct {
     int user_count;
 } notebox_t;
 
+
+void print_error(const char *msg);
+
 notebox_t* init_shared_memory(void);
-void clean_input_buffer(void);
-void view_notes(notebox_t *notebox);
-void add_note(notebox_t *notebox, char current_user[MAX_AUTHOR]);
-void edit_note(notebox_t *notebox, char current_user[MAX_AUTHOR]);
-void delete_note(notebox_t *notebox, char current_user[MAX_AUTHOR]);
+
+void view_notes(notebox_t *notebox, const char current_user[MAX_AUTHOR]);
+
+void add_note(notebox_t *notebox, const char current_user[MAX_AUTHOR]);
+
+void edit_note(notebox_t *notebox, const char current_user[MAX_AUTHOR]);
+
+void delete_note(notebox_t *notebox, const char current_user[MAX_AUTHOR]);
 
 #endif //NOTEBOX_H
